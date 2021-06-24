@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import ActorGrid from '../components/Actors/ActorGrid';
 import MainPageLayout from '../components/MainPageLayout';
 import ShowsGrid from '../components/Shows/ShowsGrid';
@@ -12,28 +12,7 @@ import {
 } from './Home.styled';
 
 const Home = () => {
-  const [input, setInput] = useLastQuery();
-  const [results, setResult] = useState(null);
-  const [searchOption, setSearchOption] = useState('shows');
-
-  const showSearch = searchOption === 'shows';
-
-  const onInputChange = ev => {
-    setInput(ev.target.value);
-  };
-
-  const onSearch = () => {
-    getAPI(`/search/${searchOption}?q=${input}`).then(result => {
-      setResult(result);
-    });
-  };
-
-  const onKeyDown = ev => {
-    if (ev.keyCode === 13) {
-      onSearch();
-    }
-  };
-  const renderResult = () => {
+  const renderResult = results => {
     if (results && results.length === 0) {
       return <div>No result found</div>;
     }
@@ -46,10 +25,34 @@ const Home = () => {
     }
     return null;
   };
+  const [input, setInput] = useLastQuery();
+  const [results, setResult] = useState(null);
+  const [searchOption, setSearchOption] = useState('shows');
 
-  const onRadioOption = ev => {
-    setSearchOption(ev.target.value);
+  const showSearch = searchOption === 'shows';
+
+  const onInputChange = useCallback(
+    ev => {
+      setInput(ev.target.value);
+    },
+    [setInput]
+  );
+
+  const onSearch = () => {
+    getAPI(`/search/${searchOption}?q=${input}`).then(result => {
+      setResult(result);
+    });
   };
+
+  const onKeyDown = ev => {
+    if (ev.keyCode === 13) {
+      onSearch();
+    }
+  };
+
+  const onRadioOption = useCallback(ev => {
+    setSearchOption(ev.target.value);
+  }, []);
   return (
     <MainPageLayout>
       <SearchInput
@@ -84,7 +87,7 @@ const Home = () => {
           Search
         </button>
       </SearchButtonWrapper>
-      {renderResult()}
+      {renderResult(results)}
     </MainPageLayout>
   );
 };
